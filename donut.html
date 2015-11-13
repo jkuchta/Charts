@@ -1,0 +1,89 @@
+<html>
+    <head>
+        <script type="text/javascript" src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.js"></script>
+        <style>
+            .legend { margin: 0 0 20px 20px; }
+            .chartLabel { font: 14px sans-serif; fill: #000; }
+            .arcLabel { font: 11px sans-serif; fill: #fff; }
+            .bar { min-height: 100%; height: 156px !important; }
+        </style>
+    </head>
+    <body>
+        <script type="text/javascript">
+            function build_chart(data, labels, chart_selector) {
+                var total = 0;
+                for(i = 0; i < data.pct.length; i++) {
+                    total += data.pct[i];
+                }
+                var w = 320,
+                    h = 320,
+                    r = Math.min(w, h) / 2,
+                    dur = 750,
+                    color = d3.scale.category10(),
+                    donut = d3.layout.pie().sort(null),
+                arc = d3.svg.arc().innerRadius(r - 70).outerRadius(r - 20);
+                var svg = d3.select(chart_selector).append("svg:svg")
+                    .attr("width", w).attr("height", h);
+                var arc_grp = svg.append("svg:g")
+                    .attr("class", "arcGrp")
+                    .attr("transform", "translate(" + (w / 2) + "," + (h / 2) + ")");
+                var label_group = svg.append("svg:g")
+                    .attr("class", "lblGroup")
+                    .attr("transform", "translate(" + (w / 2) + "," + (h / 2) + ")");
+                var center_group = svg.append("svg:g")
+                    .attr("class", "ctrGroup")
+                    .attr("transform", "translate(" + (w / 2) + "," + (h / 2) + ")");
+                var pieLabel = center_group.append("svg:text")
+                    .attr("dy", ".35em").attr("class", "chartLabel")
+                    .attr("text-anchor", "middle")
+                    .text(data.label);
+                var arcs = arc_grp.selectAll("path")
+                    .data(donut(data.pct));
+                arcs.enter().append("svg:path")
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 0.5)
+                    .attr("fill", function(d, i) {return color(i);})
+                    .attr("d", arc)
+                    .each(function(d) {this._current = d});
+                var sliceLabel = label_group.selectAll("text")
+                    .data(donut(data.pct));
+                sliceLabel.enter().append("svg:text")
+                    .attr("class", "arcLabel")
+                    .attr("transform", function(d) {return "translate(" + arc.centroid(d) + ")"; })
+                    .attr("text-anchor", "middle")
+                    .text(function(d, i) {return (data.pct[i] / total * 100).toFixed(1) + "%"; });
+                var legend = d3.select(chart_selector).append("svg")
+                    .attr("class", "legend")
+                    .attr("width", w)
+                    .attr("height", 22 * labels.length)
+                    .selectAll("g")
+                    .data(color.domain().slice())
+                    .enter().append("g")
+                    .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+                legend.append("rect")
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", color);
+                legend.append("text")
+                    .attr("x", 24)
+                    .attr("y", 9)
+                    .attr("dy", ".35em")
+                    .text(function(d, i) { return labels[i]; });
+            }
+        </script>
+
+        <script type="text/javascript">
+            $(document).ready(function(){
+                var chart_selector = '#chart';
+                var data = { label: 'Test Chart', pct: [] };
+                var labels = ['Label 1', 'Label 2', 'Label 3', 'Label 4'];
+                data.pct = [.1, .3, .4, .2];
+
+                build_chart(data, labels, chart_selector);
+            });
+        </script>
+
+        <div id="chart"></div>
+    </body>
+</html>
